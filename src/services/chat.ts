@@ -1,17 +1,24 @@
-export interface ChatResponse {
-  type: string;
-  message: string;
+export interface Source {
+  id?: string;
+  title?: string;
+  url?: string;
+  content?: string;
+  excerpt?: string;
+  [key: string]: unknown;
 }
 
-const RUNTIME_API_URL = "http://localhost:3000";
+export interface ChatResponse {
+  answer: string;
+  sources: Source[];
+}
 
-export async function sendPrompt(prompt: string): Promise<ChatResponse> {
-  const response = await fetch(`${RUNTIME_API_URL}/api/chat`, {
+export async function sendPrompt(message: string): Promise<ChatResponse> {
+  const response = await fetch("http://localhost:3000/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ query: message }),
   });
 
   if (!response.ok) {

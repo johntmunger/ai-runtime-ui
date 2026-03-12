@@ -22,7 +22,18 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/app/api",
+    "src/app/layout.tsx",
+    "src/db",
+    "src/lib/parser.ts",
+    "src/lib/rag-query.ts",
+    "src/lib/search.ts"
+  ]
 }

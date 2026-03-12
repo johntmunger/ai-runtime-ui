@@ -64,11 +64,22 @@ export default function Home() {
       const lastUserMessage = currentMessages[currentMessages.length - 1];
       const result = await sendPrompt(lastUserMessage.content);
 
+      const citations: Citation[] = (result.sources ?? []).map(
+        (src, index) => ({
+          id: src.id ?? generateId(),
+          mdnTitle: src.title ?? `Source ${index + 1}`,
+          mdnUrl: (src.url as string) ?? "",
+          excerpt:
+            (src.excerpt as string) ?? (src.content as string) ?? "",
+        }),
+      );
+
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
-        content: result.message,
+        content: result.answer,
         timestamp: new Date().toISOString(),
+        citations: citations.length > 0 ? citations : undefined,
       };
 
       setMessages([...currentMessages, assistantMessage]);
@@ -78,7 +89,7 @@ export default function Home() {
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
-        content: `# ⚠️ API Connection Error\n\nCould not connect to the runtime service at localhost:3000.\n\n**Error:** ${error instanceof Error ? error.message : String(error)}\n\n**Troubleshooting:**\n- Make sure the runtime service is running on http://localhost:3000\n- Check that POST /api/chat endpoint is available`,
+        content: `# API Connection Error\n\nCould not connect to the runtime service at localhost:3000.\n\n**Error:** ${error instanceof Error ? error.message : String(error)}\n\n**Troubleshooting:**\n- Make sure rag-mdn is running on http://localhost:3000\n- Check that POST /chat is available`,
         timestamp: new Date().toISOString(),
       };
 
