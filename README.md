@@ -73,9 +73,9 @@ Users can ask questions such as:
 
 The system will:
 
-1. send the query to the runtime server  
-2. retrieve relevant documentation  
-3. generate an answer using the retrieved context  
+1. send the query to the runtime server
+2. retrieve relevant documentation
+3. generate an answer using the retrieved context
 4. display the response with citations
 
 ---
@@ -98,16 +98,16 @@ The interface expects the runtime API to be available at:
 
 ---
 
-# Related Repositories
+# System Repositories
 
-This project is part of a modular system.
+This project is part of a modular AI system composed of several repositories.
 
-| Repository | Purpose |
-|------------|---------|
-| control-plane | agent runtime architecture |
-| ai-runtime-server | RAG runtime and chat API |
-| rag-mdn | documentation ingestion and embeddings |
-| runtime-ui | chat interface demo |
+| Repository                                                            | Description                                                      |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [control-plane](https://github.com/johntmunger/ai-control-plane)      | Agent runtime architecture (orchestrator, policy, kernel, tools) |
+| [ai-runtime-server](https://github.com/johntmunger/ai-runtime-server) | Retrieval-Augmented Generation (RAG) runtime and chat API        |
+| [rag-mdn](https://github.com/johntmunger/retrieval-grounded-llm)      | Documentation ingestion and embedding pipeline                   |
+| [runtime-ui](https://github.com/johntmunger/ai-runtime-ui)            | Chat interface for interacting with the runtime                  |
 
 ---
 
