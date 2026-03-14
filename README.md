@@ -1,73 +1,130 @@
-# React + TypeScript + Vite
+# runtime-ui
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A lightweight **chat interface** for interacting with the AI runtime system.
 
-Currently, two official plugins are available:
+This application allows users to ask developer questions and receive answers grounded in documentation retrieved through a Retrieval-Augmented Generation (RAG) pipeline.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The interface connects to the `ai-runtime-server` API and renders responses with source citations.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# What This Repository Does
 
-## Expanding the ESLint configuration
+`runtime-ui` provides the **user-facing chat interface** for the system.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Responsibilities include:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- sending user questions to the runtime API
+- rendering model responses
+- displaying source citations
+- formatting markdown and code blocks
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+The UI is intentionally minimal and exists primarily as a **demo interface for the runtime system**.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+# System Architecture
+
+This repository represents the **user interface layer** of the system.
+
+```
+                 USER
+                  │
+                  ▼
+            ┌─────────────┐
+            │  runtime-ui │
+            │ React Chat  │
+            └─────────────┘
+                  │
+                  ▼
+       ┌──────────────────────┐
+       │   ai-runtime-server   │
+       │   RAG Runtime API     │
+       └──────────────────────┘
+                  │
+                  ▼
+         ┌─────────────────┐
+         │  control-plane  │
+         │ Agent Runtime   │
+         └─────────────────┘
+                  │
+                  ▼
+           ┌──────────────┐
+           │   rag-mdn     │
+           │ Knowledge     │
+           │ Ingestion     │
+           └──────────────┘
+                  │
+                  ▼
+         ┌─────────────────┐
+         │ Postgres +      │
+         │ pgvector        │
+         │ Vector Database │
+         └─────────────────┘
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# Example Query
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Users can ask questions such as:
+
+> What is a JavaScript closure?
+
+The system will:
+
+1. send the query to the runtime server  
+2. retrieve relevant documentation  
+3. generate an answer using the retrieved context  
+4. display the response with citations
+
+---
+
+# Running Locally
+
+Start the development server:
+
+```bash
+npm run dev
 ```
+
+The UI will be available at:
+
+**http://localhost:5173**
+
+The interface expects the runtime API to be available at:
+
+**http://localhost:3000**
+
+---
+
+# Related Repositories
+
+This project is part of a modular system.
+
+| Repository | Purpose |
+|------------|---------|
+| control-plane | agent runtime architecture |
+| ai-runtime-server | RAG runtime and chat API |
+| rag-mdn | documentation ingestion and embeddings |
+| runtime-ui | chat interface demo |
+
+---
+
+# Future Improvements
+
+Planned improvements include:
+
+- hosted demo environment
+- streaming responses
+- improved citation rendering
+- additional example prompts
+- expanded developer UX
+
+---
+
+# Summary
+
+`runtime-ui` provides a minimal **chat interface for interacting with the AI runtime system**.
+
+It allows users to explore how retrieval-grounded responses are generated using the runtime and documentation knowledge base.
