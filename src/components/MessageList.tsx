@@ -8,12 +8,15 @@ import { AssistantMessage } from "./AssistantMessage";
 import { TypingIndicator } from "./TypingIndicator";
 import type { Message } from "@/types";
 
+type RuntimeMode = "chat" | "agent";
+
 interface MessageListProps {
   messages: Message[];
   isGenerating: boolean;
   onRegenerate: (messageId: string) => void;
   onPin: (messageId: string) => void;
   onCopy: (content: string) => void;
+  mode: RuntimeMode;
 }
 
 export function MessageList({
@@ -22,6 +25,7 @@ export function MessageList({
   onRegenerate,
   onPin,
   onCopy,
+  mode,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -73,6 +77,7 @@ export function MessageList({
             <AssistantMessage
               key={message.id}
               message={message}
+              mode={mode}
               onRegenerate={onRegenerate}
               onPin={onPin}
               onCopy={onCopy}

@@ -6,10 +6,33 @@ import { EmptyState } from "@/components/EmptyState";
 import { MessageList } from "@/components/MessageList";
 import { InputBar } from "@/components/InputBar";
 import { SettingsPanel } from "@/components/SettingsPanel";
+import { RuntimeDebugPanel } from "@/components/RuntimeDebugPanel";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { generateId } from "@/lib/utils";
 import { sendPrompt } from "@/services/chat";
-import type { Message, Settings, Citation } from "@/types";
+import { runAgent } from "@/services/agent";
+import type { Message, Settings } from "@/types";
+import type { TraceEvent } from "@/lib/groupTrace";
+
+type RuntimeMode = "chat" | "agent";
+
+function extractLastToolArgsFromTrace(
+  trace: TraceEvent[] | undefined,
+): Record<string, unknown> | undefined {
+  if (!trace?.length) return undefined;
+  for (let i = trace.length - 1; i >= 0; i--) {
+    const e = trace[i];
+    if (e.type !== "tool_invocation") continue;
+    const args = (e as { args?: unknown }).args;
+    if (args && typeof args === "object" && !Array.isArray(args)) {
+      return args as Record<string, unknown>;
+    }
+    if (args !== undefined) {
+      return { value: args as unknown };
+    }
+  }
+  return undefined;
+}
 
 // Default settings
 const defaultSettings: Settings = {
@@ -27,6 +50,16 @@ const defaultSettings: Settings = {
 };
 
 export default function Home() {
+  const [mode, setMode] = useState<RuntimeMode>("agent");
+  const [lastStatus, setLastStatus] = useState<"idle" | "ok" | "error">(
+    "idle",
+  );
+  const [lastEndpoint, setLastEndpoint] = useState<"/chat" | "/agent">(
+    "/agent",
+  );
+  const [lastArgs, setLastArgs] = useState<Record<string, unknown> | undefined>(
+    undefined,
+  );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [messages, setMessages] = useLocalStorage<Message[]>("messages", []);
   const [settings, setSettings] = useLocalStorage<Settings>(
@@ -38,7 +71,7 @@ export default function Home() {
 
   // Prevent hydration errors by only rendering after mount
   useEffect(() => {
-    setIsMounted(true);
+    queueMicrotask(() => setIsMounted(true));
   }, []);
 
   const handleSendMessage = async (content: string) => {
@@ -60,31 +93,42 @@ export default function Home() {
   };
 
   const callStreamingAPI = async (currentMessages: Message[]) => {
+    const endpoint: "/chat" | "/agent" = mode === "chat" ? "/chat" : "/agent";
+    setLastStatus("idle");
+    setLastEndpoint(endpoint);
+    setLastArgs(undefined);
+
     try {
       const lastUserMessage = currentMessages[currentMessages.length - 1];
-      const result = await sendPrompt(lastUserMessage.content);
+      const content = lastUserMessage.content;
 
-      const citations: Citation[] = (result.sources ?? []).map(
-        (src, index) => ({
-          id: src.id ?? generateId(),
-          mdnTitle: src.title ?? `Source ${index + 1}`,
-          mdnUrl: (src.url as string) ?? "",
-          excerpt:
-            (src.excerpt as string) ?? (src.content as string) ?? "",
-        }),
-      );
+      let answer = "";
+      let trace: Message["trace"];
+
+      if (mode === "chat") {
+        const result = await sendPrompt(content);
+        answer = result.answer;
+      } else {
+        const result = await runAgent(content);
+        answer = result.answer;
+        trace = result.trace;
+      }
+
+      setLastArgs(extractLastToolArgsFromTrace(trace));
+      setLastStatus("ok");
 
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
-        content: result.answer,
+        content: answer,
         timestamp: new Date().toISOString(),
-        citations: citations.length > 0 ? citations : undefined,
+        trace, // 👈 NEW
       };
 
       setMessages([...currentMessages, assistantMessage]);
     } catch (error) {
       console.error("Error calling API:", error);
+      setLastStatus("error");
 
       const assistantMessage: Message = {
         id: generateId(),
@@ -163,7 +207,10 @@ export default function Home() {
           onSettingsClick={() => setIsSettingsOpen(true)}
           onDownload={handleDownload}
           onRestart={handleRestart}
+          mode={mode}
+          onModeChange={setMode}
         />
+
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="max-w-6xl w-full mx-auto flex-1 flex flex-col overflow-hidden">
             <EmptyState onExampleClick={handleSendMessage} />
@@ -176,6 +223,13 @@ export default function Home() {
             placeholder="Ask me anything related to JavaScript..."
           />
         </main>
+
+        <RuntimeDebugPanel
+          mode={mode}
+          lastEndpoint={lastEndpoint}
+          lastStatus={lastStatus}
+          lastArgs={lastArgs}
+        />
       </div>
     );
   }
@@ -186,6 +240,8 @@ export default function Home() {
         onSettingsClick={() => setIsSettingsOpen(true)}
         onDownload={handleDownload}
         onRestart={handleRestart}
+        mode={mode}
+        onModeChange={setMode}
       />
 
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -196,6 +252,7 @@ export default function Home() {
             <MessageList
               messages={messages}
               isGenerating={isGenerating}
+              mode={mode}
               onRegenerate={handleRegenerate}
               onPin={handlePin}
               onCopy={handleCopy}
@@ -216,6 +273,13 @@ export default function Home() {
         settings={settings}
         onClose={() => setIsSettingsOpen(false)}
         onSettingsChange={setSettings}
+      />
+
+      <RuntimeDebugPanel
+        mode={mode}
+        lastEndpoint={lastEndpoint}
+        lastStatus={lastStatus}
+        lastArgs={lastArgs}
       />
     </div>
   );

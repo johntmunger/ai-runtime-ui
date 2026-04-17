@@ -9,10 +9,14 @@ import { Copy, RotateCcw, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./CodeBlock";
 import { SourcesFooter } from "./SourcesFooter";
+import { TracePanel } from "./TracePanel";
 import type { Message } from "@/types";
+
+type RuntimeMode = "chat" | "agent";
 
 interface AssistantMessageProps {
   message: Message;
+  mode: RuntimeMode;
   onRegenerate: (messageId: string) => void;
   onPin: (messageId: string) => void;
   onCopy: (content: string) => void;
@@ -20,12 +24,14 @@ interface AssistantMessageProps {
 
 export function AssistantMessage({
   message,
+  mode,
   onRegenerate,
   onPin,
   onCopy,
 }: AssistantMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [open, setOpen] = useState(false);
 
   const isLongMessage = message.content.length > 2000;
 
@@ -182,6 +188,20 @@ export function AssistantMessage({
             {message.content}
           </ReactMarkdown>
         </div>
+
+        {mode === "agent" && message.trace && (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setOpen(!open)}
+              className="text-xs text-[var(--muted-foreground)] hover:underline"
+            >
+              {open ? "Hide Trace" : "Show Trace"}
+            </button>
+
+            {open && <TracePanel trace={message.trace} />}
+          </div>
+        )}
 
         {/* Expand/Collapse button for long messages */}
         {isLongMessage && (

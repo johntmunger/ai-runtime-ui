@@ -4,6 +4,7 @@ export interface Message {
   content: string;
   timestamp: Date | string;
   citations?: Citation[];
+  trace?: import("@/lib/groupTrace").TraceEvent[];
   isPinned?: boolean;
   feedback?: "up" | "down" | null;
   feedbackReason?: string;

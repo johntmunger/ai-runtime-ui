@@ -11,16 +11,22 @@ import {
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 
+type RuntimeMode = "chat" | "agent";
+
 interface TopBarProps {
   onSettingsClick: () => void;
   onDownload: () => void;
   onRestart: () => void;
+  mode: RuntimeMode;
+  onModeChange: (mode: RuntimeMode) => void;
 }
 
 export function TopBar({
   onSettingsClick,
   onDownload,
   onRestart,
+  mode,
+  onModeChange,
 }: TopBarProps) {
   const { theme, setTheme } = useTheme();
 
@@ -55,6 +61,43 @@ export function TopBar({
         </div>
 
         <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              "hidden sm:inline-flex items-center rounded-lg border border-[var(--border)] overflow-hidden",
+              "bg-[var(--background)]/50",
+            )}
+            role="group"
+            aria-label="Runtime mode"
+          >
+            <button
+              type="button"
+              onClick={() => onModeChange("agent")}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-inset",
+                mode === "agent"
+                  ? "bg-[var(--accent)]/15 text-[var(--foreground)]"
+                  : "text-[var(--muted-foreground)] hover:bg-[var(--hover-bg)]",
+              )}
+              aria-pressed={mode === "agent"}
+            >
+              Agent
+            </button>
+            <button
+              type="button"
+              onClick={() => onModeChange("chat")}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-inset",
+                mode === "chat"
+                  ? "bg-[var(--accent)]/15 text-[var(--foreground)]"
+                  : "text-[var(--muted-foreground)] hover:bg-[var(--hover-bg)]",
+              )}
+              aria-pressed={mode === "chat"}
+            >
+              Chat
+            </button>
+          </div>
         <button
           onClick={onDownload}
           className={cn(
